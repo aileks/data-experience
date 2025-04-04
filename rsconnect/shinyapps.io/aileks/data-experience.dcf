@@ -1,10 +1,10 @@
-name: data-explorer
+name: data-experience
 title:
 username: aileks
 account: aileks
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 14434900
-bundleId: 10058420
-url: https://aileks.shinyapps.io/data-explorer/
+appId: 14435330
+bundleId: 10058629
+url: https://aileks.shinyapps.io/data-experience/
 version: 1
