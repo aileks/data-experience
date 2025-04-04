@@ -2,6 +2,8 @@
 
 The Data Experience is an interactive Shiny application that allows users to add their own datasets (in CSV or Excel format), explore data visually, and perform basic data analysis. It integrates several R packages to offer dynamic filtering, a variety of plotting options, and interactive statistical analysis.
 
+![Preview](img/preview.png)
+
 ## Features
 
 - Load your own datasets in CSV or Excel format.
