@@ -28,13 +28,9 @@ ui <- fluidPage(
             "Plot Options",
             selectInput("xVar", "X Variable:", choices = NULL),
             selectInput("yVar", "Y Variable:", choices = NULL),
-            selectInput("colorVar", "Color By (optional):", choices = NULL, selected = NULL),
-            conditionalPanel(
-              condition = "input.colorVar != ''",
-              actionButton("resetColor", " Clear Color Variable",
-                icon = icon("eraser"),
-                style = "margin-top: 5px; margin-bottom: 5px;"
-              )
+            selectInput("colorVar", "Color By (optional):",
+              choices = c("None" = ""),
+              selected = ""
             ),
             pickerInput("plotType", "Plot Type:",
               choices = c("Scatter Plot", "Box Plot", "Histogram", "Bar Chart", "Line Chart", "Density Plot"),
@@ -131,11 +127,6 @@ ui <- fluidPage(
 
 # Server logic
 server <- function(input, output, session) {
-  observeEvent(input$resetColor, {
-    updateSelectInput(session, "colorVar", selected = "")
-    session$sendCustomMessage(type = "plotly-update", message = list())
-  })
-
   generate_color_palette <- function(base_color, n = 5) {
     if (n <= 1) {
       return(base_color)
@@ -224,8 +215,8 @@ server <- function(input, output, session) {
     updateSelectInput(session, "xVar", choices = all_vars)
     updateSelectInput(session, "yVar", choices = all_vars)
 
-    # Include NULL option for the color variable
-    updateSelectInput(session, "colorVar", choices = c("None" = "", all_vars))
+    color_choices <- c("None" = "", setNames(all_vars, all_vars))
+    updateSelectInput(session, "colorVar", choices = color_choices, selected = "")
 
     # Create dynamic filters based on variable types
     output$dynamicFilters <- renderUI({
@@ -284,7 +275,6 @@ server <- function(input, output, session) {
 
   # Generate the interactive plot based on user selections
   output$dataPlotly <- renderPlotly({
-    # Get the data
     data <- filteredData()
 
     # Determine Y variable name based on transformation
@@ -349,7 +339,7 @@ server <- function(input, output, session) {
       }
 
       # Base boxplot without color variable
-      if (is.null(input$colorVar) || input$colorVar == "") {
+      if (input$colorVar == "") {
         p <- ggplot(data, aes_string(x = x_var, y = y_var)) +
           geom_boxplot(fill = input$plotColor) +
           theme_minimal(base_size = 14) +
