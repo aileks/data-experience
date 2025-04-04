@@ -20,15 +20,15 @@ The Data Experience is an interactive Shiny application that allows users to add
 1. Prerequisites:
    Ensure you have R installed on your system. You will also need the following R packages:
 
-   - `shiny`
-   - `dplyr`
-   - `ggplot2`
-   - `DT`
-   - `plotly`
-   - `readxl`
-   - `shinythemes`
-   - `colourpicker`
-   - `shinyWidgets`
+- `shiny`
+- `dplyr`
+- `ggplot2`
+- `DT`
+- `plotly`
+- `readxl`
+- `shinythemes`
+- `colourpicker`
+- `shinyWidgets`
 
 2. Install Required Packages:
    You can install the required packages using the following commands in R:
