@@ -1,5 +1,6 @@
 library(shiny)
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
 library(DT)
 library(plotly)
 library(readxl)
@@ -28,12 +29,19 @@ ui <- fluidPage(
             selectInput("xVar", "X Variable:", choices = NULL),
             selectInput("yVar", "Y Variable:", choices = NULL),
             selectInput("colorVar", "Color By (optional):", choices = NULL, selected = NULL),
+            conditionalPanel(
+              condition = "input.colorVar != ''",
+              actionButton("resetColor", " Clear Color Variable",
+                icon = icon("eraser"),
+                style = "margin-top: 5px; margin-bottom: 5px;"
+              )
+            ),
             pickerInput("plotType", "Plot Type:",
               choices = c("Scatter Plot", "Box Plot", "Histogram", "Bar Chart", "Line Chart", "Density Plot"),
               selected = "Scatter Plot",
               choicesOpt = list(
                 content = c(
-                  "<i class='fa fa-circle-o'></i> Scatter Plot",
+                  "<i class='fa fa-circle-dot'></i> Scatter Plot",
                   "<i class='fa fa-cube'></i> Box Plot",
                   "<i class='fa fa-bar-chart'></i> Histogram",
                   "<i class='fa fa-tasks'></i> Bar Chart",
@@ -50,7 +58,7 @@ ui <- fluidPage(
           ),
           tabPanel(
             "Filters",
-            uiOutput("dynamicFilters") # Will be populated based on selected variables
+            uiOutput("dynamicFilters")
           ),
           tabPanel(
             "Transformations",
@@ -60,8 +68,6 @@ ui <- fluidPage(
             )
           )
         ),
-
-        # Download options
         downloadButton("downloadPlot", "Download Plot"),
         downloadButton("downloadData", "Download Filtered Data")
       )
@@ -125,6 +131,23 @@ ui <- fluidPage(
 
 # Server logic
 server <- function(input, output, session) {
+  observeEvent(input$resetColor, {
+    updateSelectInput(session, "colorVar", selected = "")
+    session$sendCustomMessage(type = "plotly-update", message = list())
+  })
+
+  generate_color_palette <- function(base_color, n = 5) {
+    if (n <= 1) {
+      return(base_color)
+    }
+
+    # Create a palette based on the selected color
+    colorRampPalette(c(
+      base_color, "white",
+      adjustcolor(base_color, alpha.f = 0.3)
+    ))(n)
+  }
+
   # Reactive value to store the uploaded dataset
   datasetInput <- reactive({
     req(input$dataFile)
@@ -275,36 +298,84 @@ server <- function(input, output, session) {
 
     # Create different plot types based on selection
     if (input$plotType == "Scatter Plot") {
-      # Create base ggplot
-      p <- ggplot(data, aes_string(x = input$xVar, y = y_var)) +
-        theme_minimal(base_size = 14) +
-        labs(title = plot_title)
-
-      # Add color by variable if selected
+      # Base plot with aesthetics
       if (input$colorVar != "") {
-        p <- ggplot(data, aes_string(x = input$xVar, y = y_var, color = input$colorVar)) +
+        p <- ggplot(data, aes_string(
+          x = input$xVar, y = y_var,
+          color = input$colorVar
+        )) +
           theme_minimal(base_size = 14) +
-          labs(title = plot_title)
+          labs(title = plot_title) +
+          geom_point(size = input$pointSize)
+
+        # Get number of levels for categorical variables
+        if (is.factor(data[[input$colorVar]]) ||
+          is.character(data[[input$colorVar]])) {
+          n_colors <- length(unique(data[[input$colorVar]]))
+          p <- p + scale_color_manual(
+            values =
+              generate_color_palette(
+                input$plotColor,
+                n_colors
+              )
+          )
+        } else {
+          # For continuous variables
+          p <- p + scale_color_gradient(
+            low = adjustcolor(input$plotColor, alpha.f = 0.3),
+            high = input$plotColor
+          )
+        }
       } else {
-        p <- p + geom_point(size = input$pointSize, color = input$plotColor)
+        p <- ggplot(data, aes_string(x = input$xVar, y = y_var)) +
+          theme_minimal(base_size = 14) +
+          labs(title = plot_title) +
+          geom_point(size = input$pointSize, color = input$plotColor)
       }
 
-      # Add trend line if requested
       if (input$smoothLine) {
-        p <- p + geom_smooth(method = "loess", se = TRUE)
+        p <- p + geom_smooth(
+          method = "loess", se = TRUE,
+          formula = y ~ x
+        )
       }
     } else if (input$plotType == "Box Plot") {
-      p <- ggplot(data, aes_string(x = input$xVar, y = y_var)) +
-        geom_boxplot(fill = input$plotColor) +
-        theme_minimal(base_size = 14) +
-        labs(title = plot_title)
+      # Ensure X variable is treated as factor for box plots
+      if (is.numeric(data[[input$xVar]])) {
+        data[[paste0(input$xVar, "_factor")]] <- as.factor(data[[input$xVar]])
+        x_var <- paste0(input$xVar, "_factor")
+      } else {
+        x_var <- input$xVar
+      }
 
-      # Add color by if selected
-      if (input$colorVar != "") {
-        p <- ggplot(data, aes_string(x = input$xVar, y = y_var, fill = input$colorVar)) +
+      # Base boxplot without color variable
+      if (is.null(input$colorVar) || input$colorVar == "") {
+        p <- ggplot(data, aes_string(x = x_var, y = y_var)) +
+          geom_boxplot(fill = input$plotColor) +
+          theme_minimal(base_size = 14) +
+          labs(title = plot_title, x = input$xVar)
+      } else {
+        # Color variable is selected
+        if (is.numeric(data[[input$colorVar]])) {
+          # For numeric variables, convert to factor
+          color_var <- paste0("as.factor(", input$colorVar, ")")
+        } else {
+          color_var <- input$colorVar
+        }
+
+        # Create plot with fill aesthetic
+        p <- ggplot(data, aes_string(
+          x = x_var, y = y_var,
+          fill = color_var,
+          group = paste("interaction(", x_var, ",", color_var, ")")
+        )) +
           geom_boxplot() +
           theme_minimal(base_size = 14) +
-          labs(title = plot_title)
+          labs(
+            title = plot_title,
+            x = input$xVar,
+            fill = input$colorVar
+          )
       }
     } else if (input$plotType == "Histogram") {
       p <- ggplot(data, aes_string(x = y_var)) +
@@ -338,15 +409,44 @@ server <- function(input, output, session) {
         theme_minimal(base_size = 14) +
         labs(title = plot_title)
     } else if (input$plotType == "Density Plot") {
-      p <- ggplot(data, aes_string(x = y_var)) +
-        geom_density(fill = input$plotColor, alpha = 0.5) +
-        theme_minimal(base_size = 14) +
-        labs(title = paste("Density Plot of", input$yVar))
-
-      # Add color by if selected
       if (input$colorVar != "") {
-        p <- ggplot(data, aes_string(x = y_var, fill = input$colorVar)) +
-          geom_density(alpha = 0.5) +
+        # When using a color variable
+        if (is.factor(data[[input$colorVar]]) || is.character(data[[input$colorVar]])) {
+          # For categorical variables, use group and fill aesthetics together
+          p <- ggplot(data, aes_string(
+            x = y_var,
+            group = input$colorVar,
+            fill = input$colorVar
+          )) +
+            geom_density(alpha = 0.5) +
+            theme_minimal(base_size = 14) +
+            labs(title = paste("Density Plot of", input$yVar))
+
+          # Apply custom color palette
+          n_colors <- length(unique(data[[input$colorVar]]))
+          p <- p + scale_fill_manual(values = generate_color_palette(input$plotColor, n_colors))
+        } else {
+          # For numeric color variables
+          # Create a binned version for density fill
+          data$color_binned <- cut(data[[input$colorVar]], breaks = 5)
+
+          p <- ggplot(data, aes(
+            x = .data[[y_var]],
+            group = color_binned,
+            fill = color_binned
+          )) +
+            geom_density(alpha = 0.5) +
+            theme_minimal(base_size = 14) +
+            labs(title = paste("Density Plot of", input$yVar)) +
+            scale_fill_manual(
+              values = generate_color_palette(input$plotColor, 5),
+              name = input$colorVar
+            )
+        }
+      } else {
+        # No color variable - direct assignment of fill
+        p <- ggplot(data, aes_string(x = y_var)) +
+          geom_density(fill = input$plotColor, alpha = 0.5) +
           theme_minimal(base_size = 14) +
           labs(title = paste("Density Plot of", input$yVar))
       }
