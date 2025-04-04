@@ -20,15 +20,15 @@ The Data Experience is an interactive Shiny application that allows users to add
 1. Prerequisites:
    Ensure you have R installed on your system. You will also need the following R packages:
 
-- `shiny`
-- `dplyr`
-- `ggplot2`
-- `DT`
-- `plotly`
-- `readxl`
-- `shinythemes`
-- `colourpicker`
-- `shinyWidgets`
+   - `shiny`
+   - `dplyr`
+   - `ggplot2`
+   - `DT`
+   - `plotly`
+   - `readxl`
+   - `shinythemes`
+   - `colourpicker`
+   - `shinyWidgets`
 
 2. Install Required Packages:
    You can install the required packages using the following commands in R:
@@ -51,21 +51,21 @@ shiny::runApp("app.R")
 
 2. Select Variables and Options:
 
-- Choose the variables for the X and Y axes.
-- Optionally select a variable for color grouping.
-- Pick the desired plot type and customize the appearance using the provided options.
-- Use dynamic filters to narrow down the dataset view based on variable values.
-- Apply data transformations on the Y variable if needed.
+   - Choose the variables for the X and Y axes.
+   - Optionally select a variable for color grouping.
+   - Pick the desired plot type and customize the appearance using the provided options.
+   - Use dynamic filters to narrow down the dataset view based on variable values.
+   - Apply data transformations on the Y variable if needed.
 
 3. View and Analyze:
 
-- The Data Explorer tab provides an interactive plot and a data preview table.
-- The Statistics tab displays summary statistics and, if applicable, a correlation analysis heatmap.
+   - The Data Explorer tab provides an interactive plot and a data preview table.
+   - The Statistics tab displays summary statistics and, if applicable, a correlation analysis heatmap.
 
 4. Download Options:
 
-- Download the current plot as a PNG file.
-- Download the filtered dataset as a CSV file.
+   - Download the current plot as a PNG file.
+   - Download the filtered dataset as a CSV file.
 
 ## Code Overview
 
