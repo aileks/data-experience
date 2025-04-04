@@ -69,12 +69,10 @@ shiny::runApp("app.R")
 
 ## Code Overview
 
-The application is structured as a typical Shiny app with a ui component defining the layout and an accompanying server function handling data processing and interactive rendering. Key components include:
+The application is structured as a typical Shiny app with a `ui` component defining the layout and an accompanying `server` function handling data processing and interactive rendering. Key components include:
 
 - **Dynamic UI Generation**: Automatically creates filter options based on the uploaded dataset.
-
 - **Reactive Data Processing**: Uses reactive expressions to update plots and data views as users change inputs.
-
 - **Integration with Plotly**: Converts ggplot2 charts into interactive Plotly plots for enhanced user experience.
 
 For full details of the app code, please refer to the app.R file.
