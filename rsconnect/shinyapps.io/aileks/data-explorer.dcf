@@ -1,0 +1,10 @@
+name: data-explorer
+title:
+username: aileks
+account: aileks
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14434900
+bundleId: 10058420
+url: https://aileks.shinyapps.io/data-explorer/
+version: 1

@@ -10,11 +10,11 @@ library(shinyWidgets)
 
 ui <- fluidPage(
   theme = shinythemes::shinytheme("flatly"),
-  titlePanel("Enhanced Interactive Data Explorer"),
+  titlePanel("The Data Experience"),
   sidebarLayout(
     sidebarPanel(
       width = 3,
-      fileInput("dataFile", "Upload your data (CSV, Excel, etc.)",
+      fileInput("dataFile", "Upload your data (CSV or Excel)",
         accept = c(".csv", ".xlsx", ".xls")
       ),
 
